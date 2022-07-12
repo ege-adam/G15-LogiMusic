@@ -35,6 +35,7 @@ namespace LogiMusicApplet
         private static LCDApp lcdApp;
         private static LCDProgressBar lcdBar;
 
+        private static Task sleepTask;
         private static DateTime bgTime;
 
         private static TrayHelper trayHelper;
@@ -95,13 +96,11 @@ namespace LogiMusicApplet
             lcdMediaArt = new LCDPicture
             {
                 Location = new Point(0, 0),
-                Size = new Size(48, 48), // Resources.gtech is the image we want to draw on the screen.
+                Size = new Size(48, 48),
             };
 
             // Create an app instance.
             lcdApp = new LCDApp("LogiMusic", false, false, false);
-
-            // Add the label control to the app.
 
             lcdApp.Controls.Add(lcdMediaTitle);
             lcdApp.Controls.Add(lcdArtist);
@@ -120,8 +119,6 @@ namespace LogiMusicApplet
             lcdApp.PushToForeground();
 
             SendToBackground();
-
-            // A blocking call. Waits for the LCDApp instance to be disposed. (optional)
             lcdApp.WaitForClose();
         }
 
@@ -222,10 +219,12 @@ namespace LogiMusicApplet
 
         private static void SendToBackground()
         {
-            System.Threading.Tasks.Task.Factory.StartNew(() =>
+            bgTime = DateTime.Now.AddSeconds(bgAfter / 1000);
+            if (sleepTask != null && !sleepTask.IsCompleted) return;
+
+            sleepTask = Task.Factory.StartNew(() =>
             {
-                bgTime = DateTime.Now.AddSeconds(bgAfter / 1000);
-                while(bgTime > DateTime.Now)
+                while (bgTime > DateTime.Now)
                 {
                     Thread.Sleep(bgAfter / 4);
                 }
